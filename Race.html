@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Car Racer</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1e1e2f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+        h2 {
+            margin-bottom: 5px;
+            color: #ff4757;
+        }
+        #score {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        canvas {
+            background: #2f3542;
+            border: 3px solid #f1f2f6;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 30px;
+        }
+        button {
+            padding: 15px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+        button:active {
+            background: #ff6b81;
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🚗 Mini Car Racer</h2>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas" width="300" height="450"></canvas>
+    
+    <div class="controls">
+        <button id="leftBtn">◀ Left</button>
+        <button id="rightBtn">Right ▶</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+
+        let score = 0;
+        let isGameOver = false;
+
+        // Player configuration
+        let player = {
+            x: 125,
+            y: 350,
+            width: 40,
+            height: 70,
+            speed: 6
+        };
+
+        // Obstacle configuration
+        let obstacle = {
+            x: Math.floor(Math.random() * 220) + 20,
+            y: -100,
+            width: 40,
+            height: 70,
+            speed: 4
+        };
+
+        let moveLeft = false;
+        let moveRight = false;
+
+        // Touch & Mouse event listeners for mobile controls
+        const leftBtn = document.getElementById("leftBtn");
+        const rightBtn = document.getElementById("rightBtn");
+
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); moveLeft = true; });
+        leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveLeft = false; });
+        leftBtn.addEventListener("mousedown", () => moveLeft = true);
+        leftBtn.addEventListener("mouseup", () => moveLeft = false);
+
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); moveRight = true; });
+        rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveRight = false; });
+        rightBtn.addEventListener("mousedown", () => moveRight = true);
+        rightBtn.addEventListener("mouseup", () => moveRight = false);
+
+        function update() {
+            if (isGameOver) return;
+
+            // Move player left/right within bounds
+            if (moveLeft && player.x > 15) {
+                player.x -= player.speed;
+            }
+            if (moveRight && player.x < canvas.width - player.width - 15) {
+                player.x += player.speed;
+            }
+
+            // Move obstacle down
+            obstacle.y += obstacle.speed;
+            if (obstacle.y > canvas.height) {
+                obstacle.y = -100;
+                obstacle.x = Math.floor(Math.random() * (canvas.width - 60)) + 20;
+                score += 10;
+                scoreDisplay.innerText = "Score: " + score;
+                // Gradually increase speed
+                obstacle.speed += 0.25;
+            }
+
+            // Check collision between player and obstacle
+            if (
+                player.x < obstacle.x + obstacle.width &&
+                player.x + player.width > obstacle.x &&
+                player.y < obstacle.y + obstacle.height &&
+                player.y + player.height > obstacle.y
+            ) {
+                isGameOver = true;
+                alert("Game Over! Final Score: " + score);
+                document.location.reload();
+            }
+        }
+
+        function draw() {
+            // Clear screen
+            ctx.fillStyle = "#353b48";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw center lane divider
+            ctx.strokeStyle = "#f5f6fa";
+            ctx.setLineDash([20, 20]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Player Car
+            ctx.fillStyle = "#2ed573";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Windshield
+            ctx.fillStyle = "#f1f2f6";
+            ctx.fillRect(player.x + 6, player.y + 12, player.width - 12, 14);
+
+            // Draw Obstacle Car
+            ctx.fillStyle = "#ff4757";
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            // Windshield
+            ctx.fillStyle = "#f1f2f6";
+            ctx.fillRect(obstacle.x + 6, obstacle.y + 44, obstacle.width - 12, 14);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!isGameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
